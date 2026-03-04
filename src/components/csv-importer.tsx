@@ -45,8 +45,46 @@ interface Mapping {
 
 const REQUIRED_FIELDS: (keyof Mapping)[] = ['date', 'description', 'amount'];
 
+// A simple but effective CSV row parser that handles quoted fields.
+const parseCsvRow = (row: string): string[] => {
+  const result: string[] = [];
+  let current = '';
+  let inQuote = false;
+  for (let i = 0; i < row.length; i++) {
+    const char = row[i];
+    const nextChar = row[i + 1];
+
+    if (char === '"' && !inQuote && current === '') {
+      inQuote = true;
+      continue;
+    }
+
+    if (char === '"' && inQuote && nextChar === '"') {
+      current += '"';
+      i++; // skip next quote
+      continue;
+    }
+
+    if (char === '"' && inQuote) {
+      inQuote = false;
+      continue;
+    }
+
+    if (char === ',' && !inQuote) {
+      result.push(current);
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+  result.push(current);
+  return result;
+};
+
+
 export function CsvImporter() {
-  const { addTransaction, transactions } = useStore();
+  const { addTransaction, transactions, categories } = useStore();
   const { toast } = useToast();
 
   const [step, setStep] = useState<Step>('UPLOAD');
@@ -93,13 +131,11 @@ export function CsvImporter() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
-      // Simple CSV parser: splits by newline, then by comma.
-      // Doesn't handle commas within quoted fields.
       const rows = text
         .split('\n')
         .map((row) => row.trim())
         .filter(Boolean)
-        .map((row) => row.split(','));
+        .map(parseCsvRow);
 
       if (rows.length > 1) {
         setHeaders(rows[0]);
@@ -180,18 +216,27 @@ export function CsvImporter() {
 
   const handleConfirmImport = async () => {
     setIsProcessing(true);
-    let importedCount = 0;
     
-    // Default to 'Other' category if available, otherwise first expense category
-    const defaultCategoryId = "cat-9";
+    const defaultCategory = categories.find(c => c.id === 'cat-9' && c.kind === 'expense' && !c.isArchived) || categories.find(c => c.kind === 'expense' && !c.isArchived);
 
+    if (!defaultCategory) {
+        toast({
+            title: 'Import Failed',
+            description: 'No suitable default expense category found. Please ensure you have at least one active expense category.',
+            variant: 'destructive'
+        });
+        setIsProcessing(false);
+        return;
+    }
+    
+    let importedCount = 0;
     for (const tx of transactionsToImport) {
         addTransaction({
             dateISO: tx.date.toISOString(),
             note: tx.description,
             amountMinor: Math.abs(tx.amountMinor),
             type: tx.type,
-            categoryId: defaultCategoryId,
+            categoryId: defaultCategory.id,
         });
         importedCount++;
     }
