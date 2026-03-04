@@ -69,7 +69,7 @@ export default function AddContributionForm({ open, onOpenChange, goal }: AddCon
                   <FormLabel>Amount to Add</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">$</span>
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
                       <Input type="number" step="0.01" placeholder="50.00" className="pl-7" {...field} />
                     </div>
                   </FormControl>

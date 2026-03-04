@@ -116,7 +116,7 @@ export default function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
                     <FormLabel>Target Amount</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">$</span>
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
                         <Input type="number" step="0.01" placeholder="1000.00" className="pl-7" {...field} />
                       </div>
                     </FormControl>

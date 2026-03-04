@@ -4,7 +4,7 @@ import type { GoalIconName } from './goal-icons';
 export type User = {
   id: string;
   email: string;
-  baseCurrency: 'USD';
+  baseCurrency: 'INR';
   createdAt: string;
 };
 

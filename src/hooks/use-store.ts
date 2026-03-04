@@ -22,7 +22,7 @@ const initialData: AppData = {
   user: {
     id: 'user-1',
     email: 'user@example.com',
-    baseCurrency: 'USD',
+    baseCurrency: 'INR',
     createdAt: new Date().toISOString(),
   },
   categories: [
