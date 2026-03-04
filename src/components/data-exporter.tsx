@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { AppData, Category, Transaction } from '@/lib/types';
+import type { AppData } from '@/lib/types';
 
 function downloadFile(content: string, fileName: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType });
@@ -38,7 +38,7 @@ function downloadFile(content: string, fileName: string, mimeType: string) {
 }
 
 export function DataExporter() {
-  const { transactions, categories, budgets, user, importData } = useStore();
+  const { transactions, categories, budgets, goals, user, importData } = useStore();
   const { toast } = useToast();
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const [isRestoreAlertOpen, setIsRestoreAlertOpen] = useState(false);
@@ -71,6 +71,7 @@ export function DataExporter() {
       categories,
       transactions,
       budgets,
+      goals,
     };
     const jsonString = JSON.stringify(appData, null, 2);
     downloadFile(jsonString, `cashflow-backup-${new Date().toISOString()}.json`, 'application/json');
@@ -104,7 +105,7 @@ export function DataExporter() {
         const data = JSON.parse(text) as AppData;
         
         // Basic validation
-        if (data.user && data.categories && data.transactions && data.budgets) {
+        if (data.user && data.categories && data.transactions && data.budgets && data.goals) {
           importData(data);
           toast({ title: "Restore Successful", description: "Your data has been restored from the backup." });
         } else {
