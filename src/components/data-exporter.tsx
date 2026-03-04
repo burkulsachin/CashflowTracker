@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, type ChangeEvent } from 'react';
+import { useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { Download, Upload, AlertTriangle, FileJson, FileCsv, Loader2 } from 'lucide-react';
 import { useStore } from '@/hooks/use-store';
 import { useToast } from '@/hooks/use-toast';
