@@ -55,6 +55,7 @@ interface StoreContextType extends AppData {
   upsertCategory: (cat: Omit<Category, 'id'> | Category) => void;
   getBudgetForCategory: (categoryId: string, month: string) => Budget | undefined;
   upsertBudget: (budget: Omit<Budget, 'id' | 'userId'>) => void;
+  deleteBudget: (id: string) => void;
   addGoal: (goal: Omit<Goal, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'currentAmountMinor'>) => void;
   updateGoal: (goal: Goal) => void;
   deleteGoal: (id: string) => void;
@@ -218,6 +219,13 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [data, updateAndPersistData]);
 
+  const deleteBudget = useCallback((id: string) => {
+    if (!data) return;
+    const updatedBudgets = data.budgets.filter(b => b.id !== id);
+    const newData = {...data, budgets: updatedBudgets};
+    updateAndPersistData(newData);
+  }, [data, updateAndPersistData]);
+
   const addGoal = useCallback((goal: Omit<Goal, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'currentAmountMinor'>) => {
     if (!data) return;
     const newGoal: Goal = {
@@ -296,6 +304,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     upsertCategory,
     getBudgetForCategory,
     upsertBudget,
+    deleteBudget,
     addGoal,
     updateGoal,
     deleteGoal,
