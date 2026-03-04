@@ -11,11 +11,6 @@ import React, {
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppData, Category, Transaction, Budget, User, Goal } from '@/lib/types';
-import {
-  generateFinancialSummary,
-  FinancialSummaryInput,
-} from '@/ai/flows/generate-financial-summary';
-import { suggestTransactionCategory } from '@/ai/flows/suggest-transaction-category';
 
 // Default data for a new user
 const initialData: AppData = {
@@ -61,8 +56,6 @@ interface StoreContextType extends AppData {
   updateGoal: (goal: Goal) => void;
   deleteGoal: (id: string) => void;
   addContributionToGoal: (goalId: string, amountMinor: number) => void;
-  generateSummary: (input: FinancialSummaryInput) => Promise<string>;
-  suggestCategory: typeof suggestTransactionCategory;
   importData: (data: AppData) => void;
 }
 
@@ -275,15 +268,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     updateAndPersistData(newData);
   }, [data, updateAndPersistData]);
 
-  const generateSummary = useCallback(async (input: FinancialSummaryInput) => {
-    const result = await generateFinancialSummary(input);
-    return result.summary;
-  }, []);
-  
-  const suggestCategory = useCallback(async (input: any) => {
-    return suggestTransactionCategory(input);
-  }, []);
-
   const importData = useCallback((importedData: AppData) => {
     updateAndPersistData(importedData);
   }, [updateAndPersistData]);
@@ -310,8 +294,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     updateGoal,
     deleteGoal,
     addContributionToGoal,
-    generateSummary,
-    suggestCategory,
     importData,
   };
 
