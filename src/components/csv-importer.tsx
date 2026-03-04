@@ -237,6 +237,7 @@ export function CsvImporter() {
             amountMinor: Math.abs(tx.amountMinor),
             type: tx.type,
             categoryId: defaultCategory.id,
+            category: defaultCategory.name,
         });
         importedCount++;
     }
