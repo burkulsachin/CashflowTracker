@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
-  const { transactions, user, generateSummary, budgets } = useStore();
+  const { transactions, user, generateSummary, budgets, categories } = useStore();
   const [summary, setSummary] = useState('');
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
@@ -81,9 +81,17 @@ export default function DashboardPage() {
         merchant: tx.merchant ?? '',
       }));
 
+      const budgetsForSummary = budgets.map((budget) => {
+        const category = categories.find((c) => c.id === budget.categoryId);
+        return {
+          category: category ? category.name : 'Uncategorized',
+          amountMinor: budget.amountMinor,
+        };
+      });
+
       const summaryText = await generateSummary({
         transactions: transactionsForSummary,
-        budgets,
+        budgets: budgetsForSummary,
         startDateISO,
         endDateISO,
       });
