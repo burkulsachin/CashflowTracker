@@ -75,8 +75,14 @@ export default function DashboardPage() {
         0
       ).toISOString();
 
+      const transactionsForSummary = transactions.map((tx) => ({
+        ...tx,
+        note: tx.note ?? '',
+        merchant: tx.merchant ?? '',
+      }));
+
       const summaryText = await generateSummary({
-        transactions,
+        transactions: transactionsForSummary,
         budgets,
         startDateISO,
         endDateISO,
