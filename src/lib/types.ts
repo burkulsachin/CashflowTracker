@@ -20,6 +20,7 @@ export type Transaction = {
   userId: string;
   type: 'income' | 'expense';
   categoryId: string;
+  category: string;
   amountMinor: number;
   dateISO: string;
   note?: string;
