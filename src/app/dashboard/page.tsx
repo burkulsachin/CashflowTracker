@@ -14,16 +14,12 @@ import {
   TrendingDown,
   TrendingUp,
   LineChart,
-  Activity,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardPage() {
-  const { transactions, user, generateSummary, budgets, categories } = useStore();
-  const [summary, setSummary] = useState('');
-  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const { transactions, user } = useStore();
 
   const [monthlyStats, setMonthlyStats] = useState({
     totalIncome: 0,
@@ -59,52 +55,6 @@ export default function DashboardPage() {
       isLoading: false,
     });
   }, [transactions]);
-
-  const handleGenerateSummary = async () => {
-    setIsSummaryLoading(true);
-    try {
-      const now = new Date();
-      const startDateISO = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        1
-      ).toISOString();
-      const endDateISO = new Date(
-        now.getFullYear(),
-        now.getMonth() + 1,
-        0
-      ).toISOString();
-
-      const transactionsForSummary = transactions.map((tx) => ({
-        ...tx,
-        note: tx.note ?? '',
-        merchant: tx.merchant ?? '',
-      }));
-
-      const budgetsForSummary = budgets.map((budget) => {
-        const category = categories.find((c) => c.id === budget.categoryId);
-        return {
-          category: category ? category.name : 'Uncategorized',
-          amountMinor: budget.amountMinor,
-        };
-      });
-
-      const summaryText = await generateSummary({
-        transactions: transactionsForSummary,
-        budgets: budgetsForSummary,
-        startDateISO,
-        endDateISO,
-      });
-      setSummary(summaryText);
-    } catch (error) {
-      console.error('Failed to generate summary:', error);
-      setSummary(
-        'Sorry, I was unable to generate a financial summary at this time.'
-      );
-    } finally {
-      setIsSummaryLoading(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -174,51 +124,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg">AI Financial Summary</CardTitle>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleGenerateSummary}
-              disabled={isSummaryLoading || transactions.length === 0}
-            >
-              {isSummaryLoading ? 'Generating...' : 'Generate Summary'}
-            </Button>
-          </div>
-          <CardDescription>
-            Get a quick overview of your financial health for the current month,
-            powered by AI.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isSummaryLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          ) : summary ? (
-            <p className="text-sm text-foreground/90">{summary}</p>
-          ) : (
-            <div className="py-4 text-center text-sm text-muted-foreground">
-              {transactions.length > 0 ? (
-                <span>Click "Generate Summary" to get your analysis.</span>
-              ) : (
-                <span>
-                  No transactions this month to summarize. Add some to get
-                  started!
-                </span>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Placeholder for future charts */}
       <Card>
