@@ -242,7 +242,7 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
                     <FormControl>
                       <div className="relative">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
-                        <Input type="number" step="0.01" placeholder="25.00" className="pl-7" {...field} />
+                        <Input type="number" step="0.01" placeholder="25.00" className="pl-7" {...field} value={field.value ?? ''} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -292,7 +292,7 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
                   <FormItem>
                     <FormLabel>Merchant (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Starbucks" {...field} />
+                      <Input placeholder="e.g., Starbucks" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
