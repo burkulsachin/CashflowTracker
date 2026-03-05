@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { PlusCircle, ListFilter, ArrowUpDown } from 'lucide-react';
 import { useStore } from '@/hooks/use-store';
 import { Button } from '@/components/ui/button';
@@ -31,17 +31,17 @@ export default function TransactionsPage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
 
-  const handleNewTransaction = () => {
+  const handleNewTransaction = useCallback(() => {
     setSelectedTransaction(undefined);
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const handleEditTransaction = (transaction: Transaction) => {
+  const handleEditTransaction = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const toggleCategoryVisibility = (categoryId: string) => {
+  const toggleCategoryVisibility = useCallback((categoryId: string) => {
     setVisibleCategories(prev => {
         const newSet = new Set(prev);
         if (newSet.has(categoryId)) {
@@ -51,7 +51,7 @@ export default function TransactionsPage() {
         }
         return newSet;
     });
-  };
+  }, []);
 
   const sortedAndFilteredTransactions = useMemo(() => {
     return transactions
@@ -72,14 +72,14 @@ export default function TransactionsPage() {
       });
   }, [transactions, filter, visibleCategories, sortKey, sortDirection]);
 
-  const handleSort = (key: SortKey) => {
+  const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortKey(key);
       setSortDirection('desc');
     }
-  };
+  }, [sortKey]);
 
   return (
     <div className="space-y-6 flex flex-col h-full">

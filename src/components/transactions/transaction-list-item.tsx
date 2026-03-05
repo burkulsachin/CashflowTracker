@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { MoreHorizontal, Edit, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { Transaction } from '@/lib/types';
@@ -16,7 +16,7 @@ type TransactionListItemProps = {
   onEdit: (transaction: Transaction) => void;
 };
 
-export default function TransactionListItem({ transaction, onEdit }: TransactionListItemProps) {
+function TransactionListItem({ transaction, onEdit }: TransactionListItemProps) {
   const { deleteTransaction, getCategoryById } = useStore();
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const category = getCategoryById(transaction.categoryId);
@@ -94,3 +94,5 @@ export default function TransactionListItem({ transaction, onEdit }: Transaction
     </>
   );
 }
+
+export default React.memo(TransactionListItem);
