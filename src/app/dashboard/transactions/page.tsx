@@ -1,95 +1,74 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { PlusCircle, ListFilter, ArrowUpDown } from 'lucide-react';
-import { useStore } from '@/hooks/use-store';
+import { PlusCircle } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Card, CardContent } from '@/components/ui/card';
+import { DataTable } from '@/components/transactions/data-table';
+import { getColumns } from '@/components/transactions/columns';
+import { useStore } from '@/hooks/use-store';
 import TransactionForm from '@/components/transactions/transaction-form';
-import TransactionListItem from '@/components/transactions/transaction-list-item';
-import { Transaction } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
 
-type SortKey = 'date' | 'amount';
-type SortDirection = 'asc' | 'desc';
+// This is a server-component by default, but we need client-side interactivity.
+// We are using the 'use client' directive to make it a client component.
+// We are also using searchParams to filter the data, which requires a server-side render.
 
-export default function TransactionsPage() {
-  const { transactions, categories } = useStore();
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | undefined>(undefined);
-  const [filter, setFilter] = useState('');
-  const [visibleCategories, setVisibleCategories] = useState<Set<string>>(new Set(categories.map(c => c.id)));
-  const [sortKey, setSortKey] = useState<SortKey>('date');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+export default function TransactionsPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  const { transactions } = useStore();
+  const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<
+    Transaction | undefined
+  >(undefined);
 
-
-  const handleNewTransaction = useCallback(() => {
+  const handleNewTransaction = () => {
     setSelectedTransaction(undefined);
-    setIsFormOpen(true);
-  }, []);
+    setIsTransactionFormOpen(true);
+  };
 
   const handleEditTransaction = useCallback((transaction: Transaction) => {
     setSelectedTransaction(transaction);
-    setIsFormOpen(true);
+    setIsTransactionFormOpen(true);
   }, []);
 
-  const toggleCategoryVisibility = useCallback((categoryId: string) => {
-    setVisibleCategories(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(categoryId)) {
-            newSet.delete(categoryId);
-        } else {
-            newSet.add(categoryId);
-        }
-        return newSet;
-    });
-  }, []);
+  const columns = useMemo(
+    () => getColumns({ onEdit: handleEditTransaction }),
+    [handleEditTransaction]
+  );
 
-  const sortedAndFilteredTransactions = useMemo(() => {
-    return transactions
-      .filter(tx => {
-        const searchTerm = filter.toLowerCase();
-        const inCategory = visibleCategories.has(tx.categoryId);
-        const matchesSearch = tx.note?.toLowerCase().includes(searchTerm) || tx.merchant?.toLowerCase().includes(searchTerm) || tx.category.toLowerCase().includes(searchTerm);
-        return inCategory && matchesSearch;
-      })
-      .sort((a, b) => {
-        let comparison = 0;
-        if (sortKey === 'date') {
-          comparison = new Date(b.dateISO).getTime() - new Date(a.dateISO).getTime();
-        } else if (sortKey === 'amount') {
-          comparison = b.amountMinor - a.amountMinor;
-        }
-        return sortDirection === 'desc' ? comparison : -comparison;
-      });
-  }, [transactions, filter, visibleCategories, sortKey, sortDirection]);
+  const filteredTransactions = useMemo(() => {
+    const { type, category, month } = searchParams;
 
-  const handleSort = useCallback((key: SortKey) => {
-    if (sortKey === key) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortKey(key);
-      setSortDirection('desc');
+    let filtered = transactions;
+
+    if (type) {
+      filtered = filtered.filter((t) => t.type === type);
     }
-  }, [sortKey]);
+
+    if (category) {
+      filtered = filtered.filter((t) => t.categoryId === category);
+    }
+
+    if (month) {
+      filtered = filtered.filter((t) => t.dateISO.startsWith(month as string));
+    }
+
+    return filtered;
+  }, [transactions, searchParams]);
 
   return (
-    <div className="space-y-6 flex flex-col h-full">
-       <div className="flex items-center justify-between">
-        <div className="flex-1">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
           <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
-            Transactions
+            All Transactions
           </h1>
           <p className="text-muted-foreground">
-            View and manage all your financial activities.
+            View and manage all your recorded transactions.
           </p>
         </div>
         <Button onClick={handleNewTransaction}>
@@ -98,75 +77,11 @@ export default function TransactionsPage() {
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-                <Input 
-                    placeholder="Filter by description, merchant..."
-                    value={filter}
-                    onChange={e => setFilter(e.target.value)}
-                    className="max-w-sm"
-                />
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline">
-                            <ListFilter className="mr-2"/>
-                            Category ({visibleCategories.size})
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Filter by category</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {categories.filter(c => !c.isArchived).map(category => (
-                            <DropdownMenuCheckboxItem
-                                key={category.id}
-                                checked={visibleCategories.has(category.id)}
-                                onCheckedChange={() => toggleCategoryVisibility(category.id)}
-                            >
-                                {category.name}
-                            </DropdownMenuCheckboxItem>
-                        ))}
-                    </DropdownMenuContent>
-                </DropdownMenu>
-                 <Button variant="outline" onClick={() => handleSort('date')}>
-                    Date
-                    {sortKey === 'date' && <ArrowUpDown className="ml-2 h-4 w-4" />}
-                </Button>
-                 <Button variant="outline" onClick={() => handleSort('amount')}>
-                    Amount
-                    {sortKey === 'amount' && <ArrowUpDown className="ml-2 h-4 w-4" />}
-                </Button>
-            </div>
-        </CardContent>
-      </Card>
-      
-      <div className="flex-1 overflow-hidden">
-        <Card className="h-full flex flex-col">
-            <CardContent className="p-0 flex-1 overflow-y-auto">
-                <div className="divide-y">
-                {sortedAndFilteredTransactions.length > 0 ? (
-                    sortedAndFilteredTransactions.map((tx, index) => (
-                        <div key={tx.id} className="px-6">
-                            <TransactionListItem transaction={tx} onEdit={handleEditTransaction} />
-                        </div>
-                    ))
-                ) : (
-                    <div className="flex flex-col items-center justify-center p-12 text-center">
-                        <h3 className="text-xl font-semibold">No transactions found</h3>
-                        <p className="mt-2 text-muted-foreground">
-                            Try adjusting your filters or add a new transaction.
-                        </p>
-                    </div>
-                )}
-                </div>
-            </CardContent>
-        </Card>
-      </div>
-
+      <DataTable columns={columns} data={filteredTransactions} />
 
       <TransactionForm
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
+        open={isTransactionFormOpen}
+        onOpenChange={setIsTransactionFormOpen}
         transaction={selectedTransaction}
       />
     </div>
