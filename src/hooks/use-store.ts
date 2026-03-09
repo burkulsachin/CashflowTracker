@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, {
@@ -8,6 +7,7 @@ import React, {
   useEffect,
   ReactNode,
   useCallback,
+  useMemo,
 } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppData, Category, Transaction, Budget, User, Goal } from '@/lib/types';
@@ -272,7 +272,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     updateAndPersistData(importedData);
   }, [updateAndPersistData]);
 
-  const value = {
+  const value = useMemo(() => ({
     isLoggedIn,
     isLoading: isLoggedIn === null || (isLoggedIn && !data),
     login,
@@ -295,7 +295,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     deleteGoal,
     addContributionToGoal,
     importData,
-  };
+  }), [
+    isLoggedIn, data, login, logout, addTransaction, updateTransaction,
+    deleteTransaction, getCategoryById, upsertCategory, getBudgetForCategory,
+    upsertBudget, deleteBudget, addGoal, updateGoal, deleteGoal,
+    addContributionToGoal, importData
+  ]);
 
   return React.createElement(StoreContext.Provider, { value }, children);
 };
