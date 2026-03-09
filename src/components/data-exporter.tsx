@@ -81,6 +81,14 @@ export function DataExporter() {
   };
 
   const handleExportJson = () => {
+    if (!user) {
+      toast({
+        title: 'Authentication Error',
+        description: 'You must be logged in to export your data.',
+        variant: 'destructive',
+      });
+      return;
+    }
     const appData: AppData = {
       user,
       categories,

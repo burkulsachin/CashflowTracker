@@ -14,6 +14,7 @@ import {
   useUser,
   useCollection,
   useMemoFirebase,
+  useDoc,
 } from '@/firebase';
 import {
   setDocumentNonBlocking,
@@ -22,6 +23,7 @@ import {
   deleteDocumentNonBlocking,
 } from '@/firebase/non-blocking-updates';
 import type {
+  User,
   Category,
   Transaction,
   Budget,
@@ -35,11 +37,17 @@ import { useRouter } from 'next/navigation';
 
 export const useStore = () => {
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user: authUser, isUserLoading: isAuthLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
 
-  const userId = user?.uid;
+  const userId = authUser?.uid;
+
+  const userDocRef = useMemoFirebase(
+    () => (userId ? doc(firestore, 'users', userId) : null),
+    [firestore, userId]
+  );
+  const { data: userData, isLoading: isUserLoading } = useDoc<User>(userDocRef);
 
   // Memoized Firestore references
   const categoriesQuery = useMemoFirebase(
@@ -94,6 +102,7 @@ export const useStore = () => {
   const transactions = transactionsData || [];
   const budgets = budgetsData || [];
   const goals = goalsData || [];
+  const user = userData || null;
 
   const logout = useCallback(async () => {
     await signOut(auth);
@@ -285,12 +294,13 @@ export const useStore = () => {
   };
 
   return {
-    isLoggedIn: !!user,
-    isLoading: !user,
+    isLoggedIn: !!authUser,
+    isLoading: isAuthLoading || isUserLoading,
     isTransactionsLoading,
     login: () => {}, // Firebase handles login
     logout,
     user,
+    authUser,
     categories,
     transactions,
     budgets,

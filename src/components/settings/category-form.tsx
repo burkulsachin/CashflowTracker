@@ -28,7 +28,7 @@ type CategoryFormProps = {
 };
 
 export default function CategoryForm({ open, onOpenChange, category }: CategoryFormProps) {
-  const { upsertCategory } = useStore();
+  const { authUser, upsertCategory } = useStore();
 
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
@@ -56,7 +56,7 @@ export default function CategoryForm({ open, onOpenChange, category }: CategoryF
     if (category) {
       upsertCategory({ ...category, ...values });
     } else {
-      upsertCategory(values);
+      upsertCategory({ ...values, userId: authUser!.uid, isArchived: false });
     }
     onOpenChange(false);
   };
