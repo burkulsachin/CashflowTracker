@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -121,7 +122,7 @@ export default function BudgetForm({ open, onOpenChange, budget }: BudgetFormPro
                     <FormControl>
                       <div className="relative">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
-                        <Input type="number" step="0.01" placeholder="500.00" className="pl-7" {...field} />
+                        <Input type="number" step="0.01" placeholder="500.00" className="pl-7" {...field} value={field.value ?? ''} />
                       </div>
                     </FormControl>
                     <FormMessage />
