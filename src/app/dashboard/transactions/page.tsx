@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PlusCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -10,15 +11,8 @@ import { useStore } from '@/hooks/use-store';
 import TransactionForm from '@/components/transactions/transaction-form';
 import type { Transaction } from '@/lib/types';
 
-// This is a server-component by default, but we need client-side interactivity.
-// We are using the 'use client' directive to make it a client component.
-// We are also using searchParams to filter the data, which requires a server-side render.
-
-export default function TransactionsPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+export default function TransactionsPage() {
+  const searchParams = useSearchParams();
   const { transactions } = useStore();
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<
@@ -41,7 +35,9 @@ export default function TransactionsPage({
   );
 
   const filteredTransactions = useMemo(() => {
-    const { type, category, month } = searchParams;
+    const type = searchParams.get('type');
+    const category = searchParams.get('category');
+    const month = searchParams.get('month');
 
     let filtered = transactions;
 
