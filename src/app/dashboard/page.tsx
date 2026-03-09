@@ -15,23 +15,15 @@ import {
   TrendingUp,
   LineChart,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
 
 export default function DashboardPage() {
-  const { transactions } = useStore();
+  const { transactions, isTransactionsLoading } = useStore();
   const { user } = useUser();
 
-  const [monthlyStats, setMonthlyStats] = useState({
-    totalIncome: 0,
-    totalExpenses: 0,
-    netBalance: 0,
-    isLoading: true,
-  });
-
-  useEffect(() => {
-    // This code now runs only on the client, after hydration, preventing mismatches.
+  const monthlyStats = useMemo(() => {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -50,12 +42,11 @@ export default function DashboardPage() {
       }
     });
 
-    setMonthlyStats({
+    return {
       totalIncome,
       totalExpenses,
       netBalance: totalIncome - totalExpenses,
-      isLoading: false,
-    });
+    };
   }, [transactions]);
 
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'there';
@@ -80,7 +71,7 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {monthlyStats.isLoading ? (
+            {isTransactionsLoading ? (
               <Skeleton className="h-8 w-3/4" />
             ) : (
               <div className="text-2xl font-bold">
@@ -97,7 +88,7 @@ export default function DashboardPage() {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {monthlyStats.isLoading ? (
+            {isTransactionsLoading ? (
               <Skeleton className="h-8 w-3/4" />
             ) : (
               <div className="text-2xl font-bold">
@@ -112,7 +103,7 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {monthlyStats.isLoading ? (
+            {isTransactionsLoading ? (
               <Skeleton className="h-8 w-3/4" />
             ) : (
               <div

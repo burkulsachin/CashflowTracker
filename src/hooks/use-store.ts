@@ -84,7 +84,7 @@ export const useStore = () => {
 
   // Data hooks
   const { data: categoriesData } = useCollection<Category>(categoriesQuery);
-  const { data: transactionsData } =
+  const { data: transactionsData, isLoading: isTransactionsLoading } =
     useCollection<Transaction>(transactionsQuery);
   const { data: budgetsData } = useCollection<Budget>(budgetsQuery);
   const { data: goalsData } = useCollection<Goal>(goalsQuery);
@@ -274,6 +274,7 @@ export const useStore = () => {
   return {
     isLoggedIn: !!user,
     isLoading: !user,
+    isTransactionsLoading,
     login: () => {}, // Firebase handles login
     logout,
     user,
