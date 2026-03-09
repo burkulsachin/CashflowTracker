@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect } from 'react';
@@ -68,17 +67,28 @@ export default function GoalForm({ open, onOpenChange, goal }: GoalFormProps) {
   }, [goal, open, form]);
 
   const onSubmit = (values: GoalFormValues) => {
-    const goalData = {
+    const formPayload = {
       name: values.name,
       targetAmountMinor: Math.round(values.targetAmount * 100),
-      targetDate: values.targetDate?.toISOString(),
       icon: values.icon,
+      // This will be a string if a date is present, or `undefined` if not.
+      targetDate: values.targetDate?.toISOString(),
     };
 
     if (goal) {
-      updateGoal({ ...goal, ...goalData });
+      updateGoal({
+        id: goal.id,
+        ...formPayload,
+      });
     } else {
-      addGoal(goalData);
+      // For creation, we must not have undefined fields.
+      // So we create a new object without targetDate if it's undefined.
+      const { targetDate, ...rest } = formPayload;
+      const createPayload: any = { ...rest };
+      if (targetDate) {
+        createPayload.targetDate = targetDate;
+      }
+      addGoal(createPayload);
     }
     onOpenChange(false);
   };

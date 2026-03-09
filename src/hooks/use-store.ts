@@ -7,6 +7,7 @@ import {
   where,
   orderBy,
   serverTimestamp,
+  deleteField,
 } from 'firebase/firestore';
 import {
   useFirestore,
@@ -225,13 +226,25 @@ export const useStore = () => {
   );
 
   const updateGoal = useCallback(
-    (goal: Goal) => {
+    (goalUpdate: Partial<Goal> & { id: string }) => {
       if (!userId) return;
-      const goalRef = doc(firestore, 'users', userId, 'savingsGoals', goal.id);
-      updateDocumentNonBlocking(goalRef, {
-        ...goal,
+      const { id, ...dataToUpdate } = goalUpdate;
+      const goalRef = doc(firestore, 'users', userId, 'savingsGoals', id);
+
+      const finalUpdateData: any = {
+        ...dataToUpdate,
         updatedAt: serverTimestamp(),
-      });
+      };
+
+      // If targetDate is explicitly undefined, it signifies deletion.
+      if (
+        Object.prototype.hasOwnProperty.call(dataToUpdate, 'targetDate') &&
+        dataToUpdate.targetDate === undefined
+      ) {
+        finalUpdateData.targetDate = deleteField();
+      }
+
+      updateDocumentNonBlocking(goalRef, finalUpdateData);
     },
     [firestore, userId]
   );
