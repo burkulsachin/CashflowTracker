@@ -83,11 +83,16 @@ export const useStore = () => {
   );
 
   // Data hooks
-  const { data: categories = [] } = useCollection<Category>(categoriesQuery);
-  const { data: transactions = [] } =
+  const { data: categoriesData } = useCollection<Category>(categoriesQuery);
+  const { data: transactionsData } =
     useCollection<Transaction>(transactionsQuery);
-  const { data: budgets = [] } = useCollection<Budget>(budgetsQuery);
-  const { data: goals = [] } = useCollection<Goal>(goalsQuery);
+  const { data: budgetsData } = useCollection<Budget>(budgetsQuery);
+  const { data: goalsData } = useCollection<Goal>(goalsQuery);
+
+  const categories = categoriesData || [];
+  const transactions = transactionsData || [];
+  const budgets = budgetsData || [];
+  const goals = goalsData || [];
 
   const logout = useCallback(async () => {
     await signOut(auth);
