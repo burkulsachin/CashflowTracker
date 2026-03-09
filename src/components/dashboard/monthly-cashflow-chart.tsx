@@ -33,7 +33,7 @@ export default function MonthlyCashflowChart({ data }: MonthlyCashflowChartProps
               textAnchor="end"
               height={60}
             />
-            <YAxis tickFormatter={(num) => formatCurrency(num, true)} />
+            <YAxis tickFormatter={(num) => formatCurrency(num)} />
             <Tooltip
               formatter={(value: number) => formatCurrency(value)}
               labelFormatter={(label) => format(parseISO(label), 'MMMM yyyy')}

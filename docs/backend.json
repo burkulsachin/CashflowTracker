@@ -1,0 +1,360 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Stores user-specific profile information, separate from authentication details.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "baseCurrency": {
+          "type": "string",
+          "description": "The primary currency code (e.g., 'USD', 'EUR') for the user's financial tracking."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "baseCurrency",
+        "createdAt"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Defines a classification for transactions, such as 'Groceries' or 'Salary'.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Category)"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the category (e.g., 'Food', 'Rent')."
+        },
+        "kind": {
+          "type": "string",
+          "description": "The type of the category, indicating if it's for 'income' or 'expense'."
+        },
+        "color": {
+          "type": "string",
+          "description": "An optional hex color code associated with the category for UI representation."
+        },
+        "isArchived": {
+          "type": "boolean",
+          "description": "A flag indicating if the category is archived and should not be actively used for new transactions."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the category was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the category was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "kind",
+        "isArchived",
+        "createdAt"
+      ]
+    },
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Records an individual financial event, either an income or an expense.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Transaction entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Transaction)"
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to Category. (Relationship: Category 1:N Transaction)"
+        },
+        "type": {
+          "type": "string",
+          "description": "Indicates if the transaction is an 'income' or 'expense'."
+        },
+        "amountMinor": {
+          "type": "number",
+          "description": "The monetary amount in minor units (e.g., cents), to avoid floating-point errors."
+        },
+        "currency": {
+          "type": "string",
+          "description": "The currency code of the transaction (e.g., 'USD', 'EUR')."
+        },
+        "date": {
+          "type": "string",
+          "description": "The date and time when the transaction occurred.",
+          "format": "date-time"
+        },
+        "note": {
+          "type": "string",
+          "description": "An optional descriptive note about the transaction."
+        },
+        "merchant": {
+          "type": "string",
+          "description": "An optional name of the merchant or source involved in the transaction."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the transaction was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the transaction was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "categoryId",
+        "type",
+        "amountMinor",
+        "currency",
+        "date",
+        "createdAt"
+      ]
+    },
+    "Budget": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Budget",
+      "type": "object",
+      "description": "Defines a monthly spending limit or target for a specific category.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Budget entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Budget)"
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to Category. (Relationship: Category 1:N Budget)"
+        },
+        "month": {
+          "type": "string",
+          "description": "The budget period, formatted as 'YYYY-MM'."
+        },
+        "amountMinor": {
+          "type": "number",
+          "description": "The budgeted monetary amount for the month in minor units."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the budget was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the budget was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "categoryId",
+        "month",
+        "amountMinor",
+        "createdAt"
+      ]
+    },
+    "SavingsGoal": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SavingsGoal",
+      "type": "object",
+      "description": "Tracks progress towards a specific financial savings objective (Phase 2 feature).",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SavingsGoal entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N SavingsGoal)"
+        },
+        "name": {
+          "type": "string",
+          "description": "A descriptive name for the savings goal (e.g., 'New Car Down Payment')."
+        },
+        "targetAmountMinor": {
+          "type": "number",
+          "description": "The total monetary amount targeted for this savings goal, in minor units."
+        },
+        "currentAmountMinor": {
+          "type": "number",
+          "description": "The current amount saved towards the goal, in minor units."
+        },
+        "targetDate": {
+          "type": "string",
+          "description": "An optional target date by which to achieve the savings goal.",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the savings goal was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the savings goal was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "targetAmountMinor",
+        "currentAmountMinor",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores individual user profile information. The document ID corresponds to the user's Firebase Authentication UID. Authorization is strictly personal; only the owner can read/write their profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, matching Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "Stores categories defined by a specific user. Includes denormalized 'userId' field for authorization independence, ensuring that category access is tied directly to the user's authentication ID and the path. Only the owning user can create, read, update, or delete their categories.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, matching Firebase Authentication UID."
+            },
+            {
+              "name": "categoryId",
+              "description": "The unique identifier for a specific category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": {
+            "$ref": "#/backend/entities/Transaction"
+          },
+          "description": "Stores individual financial transactions belonging to a specific user. Includes denormalized 'userId' field for authorization independence, ensuring transaction access is tied directly to the user's authentication ID and the path. Only the owning user can create, read, update, or delete their transactions.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, matching Firebase Authentication UID."
+            },
+            {
+              "name": "transactionId",
+              "description": "The unique identifier for a specific transaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/budgets/{budgetId}",
+        "definition": {
+          "entityName": "Budget",
+          "schema": {
+            "$ref": "#/backend/entities/Budget"
+          },
+          "description": "Stores monthly budget limits set by a specific user for their categories. Includes denormalized 'userId' field for authorization independence, ensuring budget access is tied directly to the user's authentication ID and the path. Only the owning user can create, read, update, or delete their budgets.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, matching Firebase Authentication UID."
+            },
+            {
+              "name": "budgetId",
+              "description": "The unique identifier for a specific budget."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/savingsGoals/{goalId}",
+        "definition": {
+          "entityName": "SavingsGoal",
+          "schema": {
+            "$ref": "#/backend/entities/SavingsGoal"
+          },
+          "description": "Stores savings goals created by a specific user. Includes denormalized 'userId' field for authorization independence, ensuring savings goal access is tied directly to the user's authentication ID and the path. Only the owning user can create, read, update, or delete their savings goals.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user, matching Firebase Authentication UID."
+            },
+            {
+              "name": "goalId",
+              "description": "The unique identifier for a specific savings goal."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure prioritizes strict user data segregation and authorization independence, adhering to the core design principles.\n\n**Authorization Independence:** Every user-owned document (UserProfile, Category, Transaction, Budget, SavingsGoal) is placed within a dedicated subcollection under the authenticated user's path, e.g., `/users/{userId}/categories/{categoryId}`. Crucially, each document within these subcollections (`Category`, `Transaction`, `Budget`, `SavingsGoal`) explicitly contains a `userId` field. This `userId` field in the document's data **must** match the `{userId}` wildcard in its path, and both must match `request.auth.uid` during any write operation. This denormalization eliminates the need for `get()` calls in security rules to determine ownership, making authorization checks atomic, efficient, and easy to debug. For `UserProfile`, the document ID itself will be `request.auth.uid`, making ownership explicit.\n\n**Querying for Authorization Purposes (QAPs):** By enforcing a `/users/{userId}/<collection>` hierarchy, `list` operations are inherently secure. A user can only perform `list` queries within their own `/users/{request.auth.uid}/...` subcollections. Firebase Security Rules will strictly enforce that `request.auth.uid` matches the `{userId}` path parameter, ensuring that queries are naturally constrained to the requesting user's data. This prevents any 'rules are not filters' issues, as the data segmentation is achieved structurally at the path level. For instance, a query for categories would be `db.collection('users').doc(request.auth.uid).collection('categories')`, and the rule would simply verify `request.auth.uid == userId` for the `/users/{userId}/categories` path."
+  }
+}
