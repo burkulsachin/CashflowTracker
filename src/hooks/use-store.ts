@@ -39,7 +39,7 @@ const initialData: AppData = {
 const STORAGE_KEY = 'cashflow-tracker-data';
 const AUTH_KEY = 'cashflow-tracker-auth';
 
-interface StoreContextType extends AppData {
+interface StoreContextType {
   isLoggedIn: boolean | null;
   isLoading: boolean;
   login: (email: string) => void;
@@ -48,7 +48,7 @@ interface StoreContextType extends AppData {
   updateTransaction: (tx: Transaction) => void;
   deleteTransaction: (id: string) => void;
   getCategoryById: (id: string) => Category | undefined;
-  upsertCategory: (cat: Omit<Category, 'id'> | Category) => void;
+  upsertCategory: (cat: Omit<Category, 'id' | 'isArchived'> | Category) => void;
   getBudgetForCategory: (categoryId: string, month: string) => Budget | undefined;
   upsertBudget: (budget: Omit<Budget, 'id' | 'userId'>) => void;
   deleteBudget: (id: string) => void;
@@ -57,6 +57,11 @@ interface StoreContextType extends AppData {
   deleteGoal: (id: string) => void;
   addContributionToGoal: (goalId: string, amountMinor: number) => void;
   importData: (data: AppData) => void;
+  user: User;
+  categories: Category[];
+  transactions: Transaction[];
+  budgets: Budget[];
+  goals: Goal[];
 }
 
 const StoreContext = createContext<StoreContextType | null>(null);
@@ -177,19 +182,27 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     return data?.categories.find(c => c.id === id);
   }, [data]);
 
-  const upsertCategory = useCallback((cat: Omit<Category, 'id'> | Category) => {
+  const upsertCategory = useCallback((cat: Omit<Category, 'id' | 'isArchived'> | Category) => {
     if (!data) return;
     if ('id' in cat) {
       // Update
-      const updatedCategories = data.categories.map(c => c.id === cat.id ? cat : c);
-      updateAndPersistData({...data, categories: updatedCategories});
+      const updatedCategories = data.categories.map(c => (c.id === cat.id ? { ...c, ...cat } : c));
+      // Also update name in existing transactions
+      const updatedTransactions = data.transactions.map(t => {
+        if (t.categoryId === cat.id) {
+          return { ...t, category: cat.name };
+        }
+        return t;
+      });
+      updateAndPersistData({ ...data, categories: updatedCategories, transactions: updatedTransactions });
     } else {
       // Create
       const newCategory: Category = {
         ...cat,
-        id: `cat-${Date.now()}-${Math.random()}`
+        id: `cat-${Date.now()}-${Math.random()}`,
+        isArchived: false,
       };
-      updateAndPersistData({...data, categories: [...data.categories, newCategory]});
+      updateAndPersistData({ ...data, categories: [...data.categories, newCategory] });
     }
   }, [data, updateAndPersistData]);
 
