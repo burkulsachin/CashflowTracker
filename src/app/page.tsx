@@ -2,81 +2,57 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Landmark } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useStore } from '@/hooks/use-store';
+import { Landmark, Loader2 } from 'lucide-react';
+import { useUser, useAuth } from '@/firebase';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isLoggedIn } = useStore();
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (!isUserLoading && user) {
       router.replace('/dashboard');
     }
-  }, [isLoggedIn, router]);
+  }, [user, isUserLoading, router]);
 
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    login('user@example.com');
+  const handleSignIn = () => {
+    initiateAnonymousSignIn(auth);
   };
+
+  if (isUserLoading || user) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background">
+        <Landmark className="h-12 w-12 text-primary" />
+        <Loader2 className="animate-spin" />
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <div className="mb-4 flex justify-center">
-            <div className="rounded-full bg-primary p-3 text-primary-foreground">
-              <Landmark className="h-8 w-8" />
-            </div>
+      <div className="text-center">
+        <div className="mb-8 flex justify-center">
+          <div className="rounded-full bg-primary p-4 text-primary-foreground">
+            <Landmark className="h-12 w-12" />
           </div>
-          <CardTitle className="text-2xl font-bold">CashFlow Tracker</CardTitle>
-          <CardDescription>
-            Sign in to your personal finance dashboard.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="user@example.com"
-                defaultValue="user@example.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                defaultValue="password"
-                required
-              />
-            </div>
-            <p className="px-1 text-xs text-muted-foreground">
-              MVP: Login is simulated. Any email/password will work.
-            </p>
-            <Button type="submit" className="w-full">
-              Log In
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+        </div>
+        <h1 className="mb-2 text-4xl font-bold">CashFlow Tracker</h1>
+        <p className="mb-8 text-muted-foreground">
+          Your personal finance dashboard.
+        </p>
+        <button
+          onClick={handleSignIn}
+          className="rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground hover:bg-primary/90"
+        >
+          Get Started
+        </button>
+        <p className="mt-4 text-xs text-muted-foreground">
+          (Using anonymous sign-in for this demo)
+        </p>
+      </div>
     </div>
   );
 }

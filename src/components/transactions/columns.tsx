@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal, Edit, Trash2, ArrowUpDown } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, fromUnixTime } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -87,6 +87,17 @@ const ActionsCell = ({
   );
 };
 
+// Helper to convert Firestore Timestamp-like object to Date
+const getDateFromTimestamp = (timestamp: any): Date => {
+    if (timestamp instanceof Date) {
+      return timestamp;
+    }
+    if (timestamp && typeof timestamp.seconds === 'number') {
+      return fromUnixTime(timestamp.seconds);
+    }
+    return new Date(timestamp); // Fallback for string
+  };
+
 export const getColumns = ({
   onEdit,
 }: GetColumnsProps): ColumnDef<Transaction>[] => [
@@ -141,9 +152,10 @@ export const getColumns = ({
         </Button>
       );
     },
-    cell: ({ row }) => (
-      <div>{format(new Date(row.getValue('dateISO')), 'dd MMM yyyy')}</div>
-    ),
+    cell: ({ row }) => {
+        const date = getDateFromTimestamp(row.getValue('dateISO'));
+        return <div>{format(date, 'dd MMM yyyy')}</div>
+    },
   },
   {
     id: 'actions',

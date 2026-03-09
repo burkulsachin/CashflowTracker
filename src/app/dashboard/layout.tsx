@@ -5,33 +5,30 @@ import { useRouter } from 'next/navigation';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { DashboardHeader } from '@/components/dashboard-header';
-import { useStore } from '@/hooks/use-store';
+import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Landmark, Loader2 } from 'lucide-react';
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isLoggedIn, isLoading } = useStore();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isLoggedIn) {
+    if (!isUserLoading && !user) {
       router.replace('/');
     }
-  }, [isLoggedIn, isLoading, router]);
+  }, [user, isUserLoading, router]);
 
-  if (isLoading || !isLoggedIn) {
+  if (isUserLoading || !user) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Skeleton className="h-12 w-12 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-[250px]" />
-            <Skeleton className="h-4 w-[200px]" />
-          </div>
-        </div>
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background">
+        <Landmark className="h-12 w-12 text-primary" />
+        <Loader2 className="animate-spin" />
+        <p className="text-muted-foreground">Loading your dashboard...</p>
       </div>
     );
   }

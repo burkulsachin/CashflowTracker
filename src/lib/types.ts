@@ -1,5 +1,5 @@
-
 import type { GoalIconName } from './goal-icons';
+import { FieldValue } from 'firebase/firestore';
 
 export type User = {
   id: string;
@@ -10,6 +10,7 @@ export type User = {
 
 export type Category = {
   id: string;
+  userId: string;
   name: string;
   kind: 'income' | 'expense';
   isArchived: boolean;
@@ -25,8 +26,8 @@ export type Transaction = {
   dateISO: string;
   note?: string;
   merchant?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: FieldValue | string;
+  updatedAt: FieldValue | string;
 };
 
 export type Budget = {
@@ -45,8 +46,8 @@ export type Goal = {
   targetAmountMinor: number;
   currentAmountMinor: number;
   targetDate?: string; // ISO string
-  createdAt: string;
-  updatedAt: string;
+  createdAt: FieldValue | string;
+  updatedAt: FieldValue | string;
 };
 
 export type AppData = {

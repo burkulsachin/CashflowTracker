@@ -17,9 +17,11 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useUser } from '@/firebase';
 
 export default function DashboardPage() {
-  const { transactions, user } = useStore();
+  const { transactions } = useStore();
+  const { user } = useUser();
 
   const [monthlyStats, setMonthlyStats] = useState({
     totalIncome: 0,
@@ -56,11 +58,13 @@ export default function DashboardPage() {
     });
   }, [transactions]);
 
+  const displayName = user?.displayName || user?.email?.split('@')[0] || 'there';
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
-          Welcome back, {user.email.split('@')[0]}!
+          Welcome back, {displayName}!
         </h1>
         <p className="text-muted-foreground">
           Here's a summary of your financial activity for this month.

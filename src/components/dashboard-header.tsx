@@ -16,6 +16,7 @@ import { useStore } from '@/hooks/use-store';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { usePathname } from 'next/navigation';
 import { Landmark } from 'lucide-react';
+import { useUser } from '@/firebase';
 
 const getTitleFromPathname = (pathname: string) => {
   if (pathname === '/dashboard') return 'Dashboard';
@@ -30,9 +31,13 @@ const getTitleFromPathname = (pathname: string) => {
 }
 
 export function DashboardHeader() {
-  const { user, logout } = useStore();
+  const { logout } = useStore();
+  const { user } = useUser();
   const pathname = usePathname();
   const userAvatar = PlaceHolderImages.find((img) => img.id === 'user-avatar');
+
+  const userEmail = user?.email || 'Anonymous';
+  const userInitial = user?.isAnonymous ? 'A' : userEmail.charAt(0).toUpperCase();
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
@@ -49,12 +54,12 @@ export function DashboardHeader() {
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
                 <AvatarImage
-                  src={userAvatar?.imageUrl}
-                  alt={user.email}
+                  src={user?.photoURL || userAvatar?.imageUrl}
+                  alt={userEmail}
                   data-ai-hint={userAvatar?.imageHint}
                 />
                 <AvatarFallback>
-                  {user.email.charAt(0).toUpperCase()}
+                  {userInitial}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -63,11 +68,11 @@ export function DashboardHeader() {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">
-                  {user.email.split('@')[0]}
+                  {user?.displayName || 'Anonymous User'}
                 </p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user.email}
-                </p>
+                {userEmail && <p className="text-xs leading-none text-muted-foreground">
+                  {userEmail}
+                </p>}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

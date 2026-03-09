@@ -8,26 +8,53 @@ import { CalendarIcon, Loader2, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose } from '@/components/ui/sheet';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from '@/components/ui/sheet';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useStore } from '@/hooks/use-store';
-import type { Transaction, Category } from '@/lib/types';
+import type { Transaction } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Textarea } from '../ui/textarea';
 import { suggestTransactionCategory } from '@/ai/flows/suggest-transaction-category';
 import { useToast } from '@/hooks/use-toast';
 
 const transactionSchema = z.object({
-  type: z.enum(['income', 'expense'], { required_error: 'Please select a transaction type.' }),
+  type: z.enum(['income', 'expense'], {
+    required_error: 'Please select a transaction type.',
+  }),
   amount: z.coerce.number().positive({ message: 'Amount must be positive.' }),
   dateISO: z.date({ required_error: 'Please select a date.' }),
   categoryId: z.string().min(1, { message: 'Please select a category.' }),
-  note: z.string().min(2, {message: 'Please enter a description.'}),
+  note: z.string().min(2, { message: 'Please enter a description.' }),
   merchant: z.string().optional(),
 });
 
@@ -39,7 +66,11 @@ type TransactionFormProps = {
   transaction?: Transaction;
 };
 
-export default function TransactionForm({ open, onOpenChange, transaction }: TransactionFormProps) {
+export default function TransactionForm({
+  open,
+  onOpenChange,
+  transaction,
+}: TransactionFormProps) {
   const { categories, addTransaction, updateTransaction } = useStore();
   const { toast } = useToast();
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -59,14 +90,22 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
   const transactionType = form.watch('type');
   const transactionDescription = form.watch('note');
 
-  const availableCategories = categories.filter(c => c.kind === transactionType && !c.isArchived);
+  const availableCategories = categories.filter(
+    (c) => c.kind === transactionType && !c.isArchived
+  );
 
   useEffect(() => {
     if (transaction && open) {
+      let date;
+      if (transaction.dateISO && typeof transaction.dateISO === 'object' && 'seconds' in transaction.dateISO) {
+        date = new Date((transaction.dateISO as any).seconds * 1000);
+      } else {
+        date = new Date(transaction.dateISO as string);
+      }
       form.reset({
         type: transaction.type,
         amount: transaction.amountMinor / 100,
-        dateISO: new Date(transaction.dateISO),
+        dateISO: date,
         categoryId: transaction.categoryId,
         note: transaction.note || '',
         merchant: transaction.merchant || '',
@@ -82,7 +121,7 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
       });
     }
   }, [transaction, open, form]);
-  
+
   // Reset category if type changes
   useEffect(() => {
     form.setValue('categoryId', '');
@@ -90,33 +129,48 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
 
   const handleSuggestCategory = async () => {
     if (!transactionDescription) {
-        toast({ title: 'Please enter a description first.', variant: 'destructive' });
-        return;
+      toast({
+        title: 'Please enter a description first.',
+        variant: 'destructive',
+      });
+      return;
     }
     setIsSuggesting(true);
     try {
-        const result = await suggestTransactionCategory({
-            description: transactionDescription,
-            categories: availableCategories,
-            type: transactionType,
+      const result = await suggestTransactionCategory({
+        description: transactionDescription,
+        categories: availableCategories,
+        type: transactionType,
+      });
+      if (result.categoryId) {
+        form.setValue('categoryId', result.categoryId, {
+          shouldValidate: true,
         });
-        if (result.categoryId) {
-            form.setValue('categoryId', result.categoryId, { shouldValidate: true });
-            toast({ title: "AI Suggestion", description: `We've suggested a category based on your description.` });
-        } else {
-            toast({ title: 'No suggestion found', description: "We couldn't find a suitable category.", variant: 'destructive' });
-        }
+        toast({
+          title: 'AI Suggestion',
+          description: `We've suggested a category based on your description.`,
+        });
+      } else {
+        toast({
+          title: 'No suggestion found',
+          description: "We couldn't find a suitable category.",
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
-        console.error("Error suggesting category:", error);
-        toast({ title: 'AI Suggestion Failed', description: 'There was an error while getting a suggestion.', variant: 'destructive' });
+      console.error('Error suggesting category:', error);
+      toast({
+        title: 'AI Suggestion Failed',
+        description: 'There was an error while getting a suggestion.',
+        variant: 'destructive',
+      });
     } finally {
-        setIsSuggesting(false);
+      setIsSuggesting(false);
     }
   };
 
-
   const onSubmit = (values: TransactionFormValues) => {
-    const category = categories.find(c => c.id === values.categoryId);
+    const category = categories.find((c) => c.id === values.categoryId);
     if (!category) return;
 
     const transactionData = {
@@ -138,14 +192,21 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>{transaction ? 'Edit Transaction' : 'Add New Transaction'}</SheetTitle>
+          <SheetTitle>
+            {transaction ? 'Edit Transaction' : 'Add New Transaction'}
+          </SheetTitle>
           <SheetDescription>
-            {transaction ? 'Update the details of your transaction.' : 'Enter the details of your new income or expense.'}
+            {transaction
+              ? 'Update the details of your transaction.'
+              : 'Enter the details of your new income or expense.'}
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-4 flex h-[calc(100%-80px)] flex-col">
-            <div className="space-y-4 pr-6 overflow-y-auto flex-1">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="mt-4 flex h-[calc(100%-80px)] flex-col"
+          >
+            <div className="flex-1 space-y-4 overflow-y-auto pr-6">
               <FormField
                 control={form.control}
                 name="type"
@@ -176,7 +237,7 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="note"
@@ -184,7 +245,10 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="e.g., Coffee with a friend" {...field} />
+                      <Textarea
+                        placeholder="e.g., Coffee with a friend"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -196,23 +260,23 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
                 name="categoryId"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex justify-between items-center">
-                        <FormLabel>Category</FormLabel>
-                        <Button
-                            type="button"
-                            variant="link"
-                            size="sm"
-                            className="h-auto p-0 text-xs"
-                            onClick={handleSuggestCategory}
-                            disabled={isSuggesting}
-                        >
-                            {isSuggesting ? (
-                                <Loader2 className="mr-2 animate-spin" />
-                            ) : (
-                                <Sparkles className="mr-2" />
-                            )}
-                            AI Suggest
-                        </Button>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Category</FormLabel>
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs"
+                        onClick={handleSuggestCategory}
+                        disabled={isSuggesting}
+                      >
+                        {isSuggesting ? (
+                          <Loader2 className="mr-2 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-2" />
+                        )}
+                        AI Suggest
+                      </Button>
                     </div>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
@@ -221,7 +285,7 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {availableCategories.map(c => (
+                        {availableCategories.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.name}
                           </SelectItem>
@@ -241,8 +305,17 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">₹</span>
-                        <Input type="number" step="0.01" placeholder="25.00" className="pl-7" {...field} value={field.value ?? ''} />
+                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                          ₹
+                        </span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="25.00"
+                          className="pl-7"
+                          {...field}
+                          value={field.value ?? ''}
+                        />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -266,7 +339,11 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
                               !field.value && 'text-muted-foreground'
                             )}
                           >
-                            {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                            {field.value ? (
+                              format(field.value, 'PPP')
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
@@ -292,19 +369,25 @@ export default function TransactionForm({ open, onOpenChange, transaction }: Tra
                   <FormItem>
                     <FormLabel>Merchant (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Starbucks" {...field} value={field.value ?? ''} />
+                      <Input
+                        placeholder="e.g., Starbucks"
+                        {...field}
+                        value={field.value ?? ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <SheetFooter className="pt-4 mt-auto">
+            <SheetFooter className="mt-auto pt-4">
               <SheetClose asChild>
-                 <Button variant="outline">Cancel</Button>
+                <Button variant="outline">Cancel</Button>
               </SheetClose>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && <Loader2 className="mr-2 animate-spin" />}
+                {form.formState.isSubmitting && (
+                  <Loader2 className="mr-2 animate-spin" />
+                )}
                 {transaction ? 'Save Changes' : 'Create Transaction'}
               </Button>
             </SheetFooter>

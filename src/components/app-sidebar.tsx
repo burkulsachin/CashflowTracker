@@ -23,7 +23,6 @@ import {
   SidebarContent,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { useStore } from '@/hooks/use-store';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -37,7 +36,6 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user } = useStore();
 
   return (
     <Sidebar>
