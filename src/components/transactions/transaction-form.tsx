@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { CalendarIcon, Loader2, Sparkles } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
@@ -44,8 +44,6 @@ import { useStore } from '@/hooks/use-store';
 import type { Transaction } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Textarea } from '../ui/textarea';
-import { suggestTransactionCategory } from '@/ai/flows/suggest-transaction-category';
-import { useToast } from '@/hooks/use-toast';
 
 const transactionSchema = z.object({
   type: z.enum(['income', 'expense'], {
@@ -72,8 +70,6 @@ export default function TransactionForm({
   transaction,
 }: TransactionFormProps) {
   const { categories, addTransaction, updateTransaction } = useStore();
-  const { toast } = useToast();
-  const [isSuggesting, setIsSuggesting] = useState(false);
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
@@ -88,7 +84,6 @@ export default function TransactionForm({
   });
 
   const transactionType = form.watch('type');
-  const transactionDescription = form.watch('note');
 
   const availableCategories = categories.filter(
     (c) => c.kind === transactionType && !c.isArchived
@@ -126,48 +121,6 @@ export default function TransactionForm({
   useEffect(() => {
     form.setValue('categoryId', '');
   }, [transactionType, form]);
-
-  const handleSuggestCategory = async () => {
-    if (!transactionDescription) {
-      toast({
-        title: 'Please enter a description first.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setIsSuggesting(true);
-    try {
-      const result = await suggestTransactionCategory({
-        description: transactionDescription,
-        categories: availableCategories,
-        type: transactionType,
-      });
-      if (result.categoryId) {
-        form.setValue('categoryId', result.categoryId, {
-          shouldValidate: true,
-        });
-        toast({
-          title: 'AI Suggestion',
-          description: `We've suggested a category based on your description.`,
-        });
-      } else {
-        toast({
-          title: 'No suggestion found',
-          description: "We couldn't find a suitable category.",
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
-      console.error('Error suggesting category:', error);
-      toast({
-        title: 'AI Suggestion Failed',
-        description: 'There was an error while getting a suggestion.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSuggesting(false);
-    }
-  };
 
   const onSubmit = (values: TransactionFormValues) => {
     const category = categories.find((c) => c.id === values.categoryId);
@@ -260,24 +213,7 @@ export default function TransactionForm({
                 name="categoryId"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Category</FormLabel>
-                      <Button
-                        type="button"
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-xs"
-                        onClick={handleSuggestCategory}
-                        disabled={isSuggesting}
-                      >
-                        {isSuggesting ? (
-                          <Loader2 className="mr-2 animate-spin" />
-                        ) : (
-                          <Sparkles className="mr-2" />
-                        )}
-                        AI Suggest
-                      </Button>
-                    </div>
+                    <FormLabel>Category</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
