@@ -1,178 +1,24 @@
-/**
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership security model. All data is
- * segregated within a user-specific data tree, ensuring that a user can only
- * ever access their own information. There is no public or shared data.
- *
- * Data Structure:
- * All application data is nested under the top-level 'users' collection.
- * A user's profile is stored at /users/{userId}, where {userId} is the
- * Firebase Authentication UID. All other user-specific data, such as
- * categories, transactions, budgets, and savings goals, are stored in
-
- * subcollections within their user document (e.g., /users/{userId}/transactions/{transactionId}).
- *
- * Key Security Decisions:
- * - Strict Data Privacy: All read and write operations are restricted to the
- *   authenticated owner of the data.
- * - No Public Listing: It is impossible to list all users or any data that
- *   does not belong to the currently authenticated user.
- * - Path-Based Security: The hierarchical data structure is the primary means
- *   of securing list queries. Rules ensure that the {userId} in the path
- *   matches the requester's auth UID.
- *
- * Denormalization for Authorization:
- * To ensure fast and secure rule execution, each document within a user's
- * subcollections (e.g., a Transaction document) must contain a 'userId' field
- * that matches the owner's UID. These rules enforce this link on all write
- * operations, preventing any data from being created without a clear and
- * immutable ownership reference. This avoids costly cross-document `get()`
- * calls in our rules.
- *
- * Structural Segregation:
- * The data model naturally segregates each user's data into its own document
- * tree (/users/{userId}/...). This is a highly secure and performant pattern
- * that prevents accidental data leakage between users.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ----------------------------------------------------------------------
-    // Helper Functions
-    // ----------------------------------------------------------------------
-
-    /**
-     * Returns true if the user is authenticated.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * Returns true if the user's UID matches the provided userId.
-     */
+    // Returns true if the user's UID matches the provided userId.
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth != null && request.auth.uid == userId;
     }
 
-    /**
-     * Returns true if the user is the owner and the document already exists.
-     * Used for safe update and delete operations.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * Validates that a user is creating their own profile document and that
-     * the document's 'id' field correctly matches their UID for relational integrity.
-     */
-    function isCreatingOwnProfile(userId) {
-      return isOwner(userId) && request.resource.data.id == userId;
-    }
-
-    /**
-     * Validates that a user is updating their own profile and that the 'id'
-     * field, which links to their auth UID, remains immutable.
-     */
-    function isUpdatingOwnProfile(userId) {
-      return isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * Validates that a user is creating a document in their own subcollection
-     * and that the document's internal 'userId' field correctly references their UID.
-     */
-    function isCreatingOwnSubdocument(userId) {
-      return isOwner(userId) && request.resource.data.userId == userId;
-    }
-
-    /**
-     * Validates that a user is updating a document in their own subcollection
-     * and that the internal 'userId' field remains immutable.
-     */
-    function isUpdatingOwnSubdocument(userId) {
-      return isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-    }
-
-    // ----------------------------------------------------------------------
-    // Collection Rules
-    // ----------------------------------------------------------------------
-
-    /**
-     * @description Controls access to a user's own profile document.
-     * @path /users/{userId}
-     * @allow (create) An authenticated user can create their own profile document.
-     * @deny  (create) An authenticated user cannot create a profile for another UID.
-     * @principle Restricts access to a user's own data tree and validates self-creation.
-     */
+    // Rules for user-specific data
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Disallow listing all user profiles for security.
-      allow create: if isCreatingOwnProfile(userId);
-      allow update: if isUpdatingOwnProfile(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Controls access to user-defined transaction categories.
-     * @path /users/{userId}/categories/{categoryId}
-     * @allow (create) An authenticated user can create a category in their own subcollection.
-     * @deny  (get) An authenticated user cannot get categories belonging to another user.
-     * @principle Enforces document ownership and validates relational integrity.
-     */
-    match /users/{userId}/categories/{categoryId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isCreatingOwnSubdocument(userId);
-      allow update: if isUpdatingOwnSubdocument(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Controls access to a user's financial transactions.
-     * @path /users/{userId}/transactions/{transactionId}
-     * @allow (list) An authenticated user can list all transactions in their own subcollection.
-     * @deny  (list) An authenticated user cannot list transactions for another user.
-     * @principle Enforces document ownership and validates relational integrity.
-     */
-    match /users/{userId}/transactions/{transactionId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isCreatingOwnSubdocument(userId);
-      allow update: if isUpdatingOwnSubdocument(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Controls access to a user's monthly budgets.
-     * @path /users/{userId}/budgets/{budgetId}
-     * @allow (update) An authenticated user can update a budget they own.
-     * @deny  (update) An authenticated user cannot update a budget owned by someone else.
-     * @principle Enforces document ownership and validates relational integrity.
-     */
-    match /users/{userId}/budgets/{budgetId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isCreatingOwnSubdocument(userId);
-      allow update: if isUpdatingOwnSubdocument(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Controls access to a user's savings goals.
-     * @path /users/{userId}/savingsGoals/{goalId}
-     * @allow (delete) An authenticated user can delete their own savings goal.
-     * @deny  (delete) An authenticated user cannot delete another user's savings goal.
-     * @principle Enforces document ownership and validates relational integrity.
-     */
-    match /users/{userId}/savingsGoals/{goalId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isCreatingOwnSubdocument(userId);
-      allow update: if isUpdatingOwnSubdocument(userId);
-      allow delete: if isExistingOwner(userId);
+      // A user can create, read, update, or delete their own user document.
+      allow read, update, delete: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.id == userId;
+      
+      // A user can read and write to any document in any of their subcollections.
+      // This single rule covers list, get, create, update, and delete for all
+      // nested data like transactions, budgets, and goals.
+      match /{allPaths=**} {
+        allow read, write: if isOwner(userId);
+      }
     }
   }
 }
