@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { PlusCircle, Target } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { PlusCircle, Target, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, isWithinInterval, addMonths, subMonths, isSameMonth } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/hooks/use-store';
@@ -24,23 +24,17 @@ export default function BudgetsPage() {
   const [selectedBudget, setSelectedBudget] = useState<Budget | undefined>(
     undefined
   );
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  const [dateInfo, setDateInfo] = useState<{
-    now: Date;
-    currentMonth: string;
-    monthStart: Date;
-    monthEnd: Date;
-  } | null>(null);
-
-  useEffect(() => {
-    const now = new Date();
-    setDateInfo({
+  const dateInfo = useMemo(() => {
+    const now = currentDate;
+    return {
       now,
       currentMonth: format(now, 'yyyy-MM'),
       monthStart: startOfMonth(now),
       monthEnd: endOfMonth(now),
-    });
-  }, []);
+    };
+  }, [currentDate]);
 
   const monthlyBudgets = useMemo(() => {
     if (!dateInfo) return [];
@@ -89,6 +83,16 @@ export default function BudgetsPage() {
     setIsBudgetFormOpen(true);
   };
 
+  const handlePreviousMonth = () => {
+    setCurrentDate(subMonths(currentDate, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(addMonths(currentDate, 1));
+  };
+
+  const isCurrentMonth = isSameMonth(currentDate, new Date());
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -104,10 +108,18 @@ export default function BudgetsPage() {
             .
           </p>
         </div>
-        <Button onClick={handleNewBudget}>
-          <PlusCircle />
-          <span className="hidden md:inline">New Budget</span>
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" size="icon" onClick={handlePreviousMonth}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" onClick={handleNextMonth} disabled={isCurrentMonth}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button onClick={handleNewBudget}>
+            <PlusCircle />
+            <span className="hidden md:inline">New Budget</span>
+          </Button>
+        </div>
       </div>
 
       <Card>
