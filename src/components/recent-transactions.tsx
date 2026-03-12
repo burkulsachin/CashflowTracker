@@ -43,7 +43,9 @@ export function RecentTransactions() {
             ) : recentTransactions.length > 0 ? (
               recentTransactions.map((tx) => (
                 <TableRow key={tx.id}>
-                  <TableCell className="font-medium">{tx.description}</TableCell>
+                  <TableCell className="font-medium">
+                    {tx.note || 'No description'}
+                  </TableCell>
                   <TableCell>
                     <Badge
                       variant={tx.type === 'income' ? 'success' : 'destructive'}
