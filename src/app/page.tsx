@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser } from '@/firebase/provider';
 import { Loader2, Landmark } from 'lucide-react';
 
 export default function Home() {

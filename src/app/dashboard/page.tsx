@@ -13,11 +13,13 @@ import {
   DollarSign,
   TrendingDown,
   TrendingUp,
-  LineChart,
 } from 'lucide-react';
 import { useMemo } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useUser } from '@/firebase';
+import { SpendingChart } from '@/components/spending-chart';
+import { subDays, format } from 'date-fns';
+import { RecentTransactions } from '@/components/recent-transactions';
 
 export default function DashboardPage() {
   const { transactions, isTransactionsLoading } = useStore();
@@ -47,6 +49,30 @@ export default function DashboardPage() {
       totalExpenses,
       netBalance: totalIncome - totalExpenses,
     };
+  }, [transactions]);
+  
+  const chartData = useMemo(() => {
+    const last30Days = Array.from({ length: 30 }, (_, i) => subDays(new Date(), i));
+    const dailySpending = last30Days.map(day => ({
+        date: format(day, 'yyyy-MM-dd'),
+        total: 0
+    }));
+
+    transactions.forEach(tx => {
+        if (tx.type === 'expense') {
+            const day = dailySpending.find(d => d.date === tx.dateISO.split('T')[0]);
+            if (day) {
+                day.total += tx.amountMinor / 100;
+            }
+        }
+    });
+
+    return [
+      {
+        id: 'spending',
+        data: dailySpending.map(d => ({ x: d.date, y: d.total })).reverse(),
+      },
+    ];
   }, [transactions]);
 
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'there';
@@ -120,19 +146,21 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Placeholder for future charts */}
+      <RecentTransactions />
+
       <Card>
         <CardHeader>
           <CardTitle>Spending Over Time</CardTitle>
           <CardDescription>
-            A chart showing your spending trends will be here soon.
+            A chart showing your spending trends over the last 30 days.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex h-60 items-center justify-center rounded-md bg-muted/50">
-          <div className="text-center text-muted-foreground">
-            <LineChart className="mx-auto mb-2 h-12 w-12" />
-            <p>Chart coming soon!</p>
-          </div>
+        <CardContent>
+          {isTransactionsLoading ? (
+              <Skeleton className="h-60 w-full" />
+            ) : (
+              <SpendingChart data={chartData} />
+          )}
         </CardContent>
       </Card>
     </div>
